@@ -73,10 +73,7 @@ class Point:
         self.t.speed(speed)
 
     def __str__(self):
-        if isinstance(self.x, int) & isinstance(self.y, int):
-            return str(( self.x , self.y ))
-        else:
-            return str(( int(self.x*100)/100. , int(self.y*100)/100. ))
+        return str(( self.x , self.y ))
 
     # def __str__(self):
     #     return '(' + str(self.x) +', '+ str(self.y) +')'
@@ -238,7 +235,7 @@ class Bow:
 
     def __str__(self):
         s = '( "' + self.spec +'"'
-        s += ', ' + str(self.p1) +', ' + str(self.p2)
+        # s += ', ' + str(self.p1) +', ' + str(self.p2)
         # s += ', '+ str(self.p0)
         # s += ', (' + str(int(self.pa.x*10)/10.)+', '+ str(int(self.pa.y*10)/10.)+')'
         # s+= ', ' + str(self.arrow)
@@ -260,15 +257,6 @@ class Bow:
             orig = self.p0
         sin, cos = math.sin(alpha), math.cos(alpha)
         return Point(cos * (p.x-orig.x) - sin * (p.y-orig.y) + orig.x, sin * (p.x-orig.x) + cos * (p.y-orig.y) + orig.y)
-
-    def draw_approximates(self):
-        setpos(self.taprox, self.approximates[0].x, self.approximates[0].y)
-        self.taprox.pd()
-        for p in self.approximates:
-            p.draw('black', 2)
-            setpos(self.taprox, p.x, p.y)
-        self.taprox.pu()
-        return
 
     def show_tolerance(self, p, r, fill=True):
         # self.ttolerance.pu()
@@ -299,7 +287,13 @@ class Bow:
                 p.draw('red')
 
         if self.approximates is not None:
-            self.draw_approximates()
+            setpos(self.taprox, self.approximates[0].x, self.approximates[0].y)
+            self.taprox.pd()
+            for p in self.approximates:
+                p.draw('black', 2)
+                setpos(self.taprox, p.x, p.y)
+            self.taprox.pu()
+
 
         return
 
@@ -310,7 +304,7 @@ class Bow:
         for a in range(-90, 91, steps):
             ar = a * math.pi / 180
             p = self.rotate(Point(r * math.sin(ar) + self.p0.x, q * r * math.cos(ar) + self.p0.y))
-            self.samples.append(p)
+            self.samples.append(Point(int(p.x*100)/100., int(p.y*100)/100.))
         return
 
     def approximate(self, tol=0.25):
@@ -562,7 +556,7 @@ for line in f:
         s = str(index)
         while len(s)<3:
             s = '0'+s
-        ts.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+s+'.'+fn+ ".eps")
+        ts.getcanvas().postscript(file="..\E\\"+s+'.'+fn+ ".eps")
         _t.clear()
         _telipse.clear()
         _ttolerance.clear()
