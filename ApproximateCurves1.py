@@ -3,7 +3,6 @@ from Tkinter import *
 import turtle
 import re
 
-
 precision = 25
 def setpos(t, x, y, ):
     t.setpos(x*precision, y*precision)
@@ -266,6 +265,19 @@ class Bow:
         # self.ttolerance.circle(r*precision)
         return
 
+    def translate(self, p):
+        self._p1 = Point(p.x+self.p1.x, p.y+self.p1.y)
+        self._p2 = Point(p.x+self.p2.x, p.y+self.p2.y)
+        self._p0 = Point(p.x+self.p0.x, p.y+self.p0.y)
+        self._pa = Point(p.x+self.pa.x, p.y+self.pa.y)
+        if self.samples is not None:
+            for i in range(0, len(self.samples)):
+                self.samples[i]=Point(p.x+self.samples[i].x, p.y+self.samples[i].y)
+        if self.approximates is not None:
+            for i in range(0, len(self.approximates)):
+                self.samples[i]=Point(p.x+self.samples[i].x, p.y+self.samples[i].y)
+
+
     def draw(self, steps=1):
         # self.p1.draw()
         # self.p2.draw()
@@ -287,11 +299,12 @@ class Bow:
                 p.draw('red')
 
         if self.approximates is not None:
-            setpos(self.taprox, self.approximates[0].x, self.approximates[0].y)
-            self.taprox.pd()
+            self.taprox.pu()
+            # setpos(self.taprox, self.approximates[0].x, self.approximates[0].y)
             for p in self.approximates:
                 p.draw('black', 2)
                 setpos(self.taprox, p.x, p.y)
+                self.taprox.pd()
             self.taprox.pu()
 
 
@@ -412,6 +425,7 @@ class Bow:
         a = 0.
         for i in range(1, len(self.approximates)):
             p=self.rotate(self.approximates[i], -self.alpha, self.p1)
+            p = Point(p.x - self.p1.x, p.y - self.p1.y)
             # p.draw()
             a = a+(last.y+p.y)*(p.x-last.x)/2.
             last = p
@@ -510,13 +524,19 @@ def decodeEllipse(spec):
 
 def showBows(index, bows):
     a = []
+    p = None
     for b in bows:
+        if p is None:
+            p = Point(0,0)
+        b.translate(p)
+
         b.sample()
         b.approximate()
 
         b.draw()
 
         a.append(b)
+        p=b.p2
 
     if len(a)>0:
         print index, a
@@ -556,7 +576,7 @@ for line in f:
         s = str(index)
         while len(s)<3:
             s = '0'+s
-        ts.getcanvas().postscript(file="..\E\\"+s+'.'+fn+ ".eps")
+        ts.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+s+'.'+fn+ ".eps")
         _t.clear()
         _telipse.clear()
         _ttolerance.clear()
