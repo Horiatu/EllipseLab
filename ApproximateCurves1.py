@@ -62,6 +62,42 @@ def setupGrid(xl, xr, yl, yr, title):
 
 setupGrid(xl, xr, yl, yr, ['Approximate Ellipse'])
 
+class Spec:
+    def __init__(self, spec):
+        self.spec = spec
+        self.point = Point(0,0)
+        self.pen = False
+        lastCommand = None
+
+    def getNum(self):
+        n = ''
+        while (len(self.spec)>0) & (self.spec[0] in '0123456789'):
+            n += self.spec[0]
+            self.spec = self.spec[1:]
+        return int(n)
+
+    def get_command(self):
+        while (len(self.spec)>0) & (self.spec[0] not in 'ABBVLRUDC'):
+            self.spec = self.spec[1:]
+        if len(self.spec)==0:
+            return None
+        lastCommand = self.spec[0]
+        self.spec = self.spec[1:]
+
+        if lastCommand=='A':
+            self.getNum()
+        else:
+            if lastCommand=='C':
+                self.pen=True
+            else:
+                if lastCommand=='L':
+                    self.point = Point(self.point.x-self.getNum(), self.point.y)
+                else:
+                    if lastCommand=='R':
+                        self.point = Point(self.point.x+self.getNum(), self.point.y)
+
+        return lastCommand
+
 _t = turtle.Turtle()
 class Point:
     def __init__(self, x, y, color='black', size=1, width=3, speed=0):
@@ -72,7 +108,7 @@ class Point:
         self.t.speed(speed)
 
     def __str__(self):
-        return str(( self.x , self.y ))
+        return str([self.x , self.y ])
 
     # def __str__(self):
     #     return '(' + str(self.x) +', '+ str(self.y) +')'
@@ -542,6 +578,14 @@ def showBows(index, bows):
         print index, a
     return
 
+
+# b = decodeEllipse('L20U7O6')
+# b.translate(Point(4,3))
+# # b.sample()
+# b.approximate()
+# b.draw()
+# print b.approximates
+
 f = open('data.txt')
 index = 0
 av = 0
@@ -551,35 +595,37 @@ for line in f:
     if line.strip() == 'stop':
         if nv > 0:
             print str(int(av / nv * 100)/10.)+'%'
+        turtle.Screen().exitonclick()
         k = raw_input("press [Enter] to end...")
         exit()
 
-    bows = decodeEllipses(line)
-    showBows(index, bows)
-
-    fn = ''
-    for b in bows:
-        if b.approximates is not None:
-            err = math.fabs((b.area - b.approximate_area) / (b.area + b.approximate_area))*2
-            av +=err
-            nv += 1
-
-        b.get_best_point_for_label().label(
-                b.get_area_error(),
-            'red', 'center', ("Arial", 14, "normal"))
-
-        if fn != '':
-            fn += '+'
-        fn += b.spec
-
-    if fn != '':
-        s = str(index)
-        while len(s)<3:
-            s = '0'+s
-        ts.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+s+'.'+fn+ ".eps")
-        _t.clear()
-        _telipse.clear()
-        _ttolerance.clear()
-        _taprox.clear()
+    decode(line)
+#     bows = decodeEllipses(line)
+#     showBows(index, bows)
+#
+#     fn = ''
+#     for b in bows:
+#         if b.approximates is not None:
+#             err = math.fabs((b.area - b.approximate_area) / (b.area + b.approximate_area))*2
+#             av +=err
+#             nv += 1
+#
+#         b.get_best_point_for_label().label(
+#                 b.get_area_error(),
+#             'red', 'center', ("Arial", 14, "normal"))
+#
+#         if fn != '':
+#             fn += '+'
+#         fn += b.spec
+#
+#     if fn != '':
+#         s = str(index)
+#         while len(s)<3:
+#             s = '0'+s
+#         ts.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+s+'.'+fn+ ".eps")
+#         _t.clear()
+#         _telipse.clear()
+#         _ttolerance.clear()
+#         _taprox.clear()
 
 turtle.Screen().exitonclick()
