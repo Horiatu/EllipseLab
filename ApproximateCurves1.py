@@ -27,74 +27,34 @@ yl, yr = -dd, dd
 
 
 class Sketch:
-    def __init__(self, xl, xr, yl, yr, title):
+    def __init__(self):
         self.screen = turtle.Screen()
+        if self.screen.window_width > self.screen.window_height:
+            self.max_size = self.screen.window_height()
+        else:
+            self.max_size = self.screen.window_width()
 
         self.pen = turtle.Turtle()
         self.penEllipse = turtle.Turtle()
         self.penTolerance = turtle.Turtle()
         self.penApproximate = turtle.Turtle()
+        self.penGrid = turtle.Turtle()
 
         self.pen.ht()
         self.penEllipse.ht()
         self.penTolerance.ht()
         self.penApproximate.ht()
+        self.penGrid.ht()
 
-        self.setupGrid(xl, xr, yl, yr, title)
         self.penDown = False
         self.LastPoint = None
 
-    def setupGrid(self, xl, xr, yl, yr, title):
-        if self.screen.window_width > self.screen.window_height:
-            max_size = self.screen.window_height()
-        else:
-            max_size = self.screen.window_width()
-
-        screen = turtle.Screen()
-        screen.title(title)
-        r = (yl - yr) / (xl - xr + 0.0)
-        screen.setup(width=max_size / r, height=int(max_size), startx=None, starty=10)
-        screen.setworldcoordinates(xl * precision, yl * precision, xr * precision + 4, yr * precision + 4)
-        t = turtle.Turtle()
-        t.ht()
-        t.speed(0)
-
-        for x in range(xl, xr + 1):
-            if x == 0:
-                t.pencolor("darkgray")
-                t.pensize(3)
-            else:
-                t.pensize(1)
-                if x % 10 == 0:
-                    t.pencolor("black")
-                else:
-                    t.pencolor("gray")
-            t.pu()
-            setpos(t, x, yr)
-            t.pd()
-            setpos(t, x, yl)
-
-        for y in range(yl, yr + 1):
-            if y == 0:
-                t.pensize(3)
-                t.pencolor("darkgray")
-            else:
-                t.pensize(1)
-                if y % 10 == 0:
-                    t.pencolor("black")
-                else:
-                    t.pencolor("gray")
-            t.pu()
-            setpos(t, xl, y)
-            t.pd()
-            setpos(t, xr, y)
-        return
-
-    def Clear(self):
-        sketch.pen.clear()
-        sketch.penEllipse.clear()
-        sketch.penTolerance.clear()
-        sketch.penApproximate.clear()
+    def clear(self):
+        self.pen.clear()
+        self.penEllipse.clear()
+        self.penTolerance.clear()
+        self.penApproximate.clear()
+        self.penGrid.clear()
         self.penDown = False
         return self.penDown
 
@@ -114,8 +74,51 @@ class Sketch:
         self.penDown = True
         return self.penDown
 
+    def setup(self, xl, xr, yl, yr, title):
+        self.clear()
+        self.screen.title(title)
 
-sketch = Sketch(-40, 140, -30, 70, ['Sketch'])
+        r = (yl - yr) / (xl - xr + 0.0)
+
+        self.screen.setup(width=int(self.max_size / r), height=int(self.max_size), startx=None, starty=10)
+        self.screen.setworldcoordinates(xl * precision, yl * precision, xr * precision + 4, yr * precision + 4)
+
+        t = self.penGrid
+        t.speed(0)
+
+        for x in range(xl, xr + 1):
+            if x == 0:
+                t.pensize(2)
+                t.pencolor("blue")
+            else:
+                t.pensize(1)
+                if x % 10 == 0:
+                    t.pencolor("black")
+                else:
+                    t.pencolor("gray")
+            t.pu()
+            setpos(t, x, yr)
+            t.pd()
+            setpos(t, x, yl)
+
+        for y in range(yl, yr + 1):
+            if y == 0:
+                t.pensize(2)
+                t.pencolor("blue")
+            else:
+                t.pensize(1)
+                if y % 10 == 0:
+                    t.pencolor("black")
+                else:
+                    t.pencolor("gray")
+            t.pu()
+            setpos(t, xl, y)
+            t.pd()
+            setpos(t, xr, y)
+        return
+
+
+sketch = Sketch()
 
 
 class Point:
@@ -527,7 +530,7 @@ class Bow:
 
 
 def decodeEllipse(spec):
-    print spec
+    # print spec
     regex = "([L|R|U|D|I|O]\d+)"
     tok = re.findall(regex, spec)
     # nn = []
@@ -557,20 +560,6 @@ def decodeEllipse(spec):
     # nn.append((p1,p2,d))
 
     return bow
-
-def gepenEllipsePoints(b, approximateMode=False):
-    if(approximateMode):
-        b.aproximate()
-        return b.approximates
-    else:
-        b.sample()
-        return b.samples
-
-
-# points = decodeEllipse('...').gepenEllipsePoints()  # get samples
-# or
-# points = gepenEllipsePoints(decodeEllipse('...'), True)  # get approximates
-
 
 def showBows(index, bows):
     a = []
@@ -603,26 +592,20 @@ def decodeLength(spec):
                     x = n
     return Point(x, y)
 
-
-def decodeSketch(spec):
+def drawSketch(segments):
     sketch.penDown = True
 
-    regex = "BV?(([L|R|U|D]\d+)?[L|R|U|D]\d+[I|O]\d+)|(?:V([L|R|U|D]\d+))?([L|R|U|D]\d+)|(A(\d+)|C)"
-    # regex = "(B[V|U|D|L|R]([L\d+|R\d+|U\d+|D\d+])+[I|O]\d+)|(?:V)([L|R]\d+)([U|D]\d+)|([L|R]\d+)|([U|D]\d+)"
-    print spec
-    segments = re.findall(regex, spec)
-    print segments
-    # LastPoint.draw('Red', 6)
     for segment in segments:
-        if(segment[5] != ''):
+        if (segment[5] != ''):
+            print segments
             sketch.penDown = sketch.PenUp()
+            sketch.LastPoint = Point(0, 0)
         if (segment[5] == '0'):
-            sketch.penDown = sketch.Clear()
-            sketch.LastPoint = Point(0,0)
+            sketch.penDown = False
             sketch.penDown = False
         if (segment[4] == 'C'):
             sketch.penDown = sketch.PenDown()
-        if(segment[0] != ''):
+        if (segment[0] != ''):
             b = decodeEllipse(segment[0])
             b.translate(sketch.LastPoint)
             # b.sample()
@@ -632,60 +615,146 @@ def decodeSketch(spec):
             # LastPoint.draw('Black', 6)
         else:
             p0 = Point(sketch.LastPoint.x, sketch.LastPoint.y)
-            if(segment[2] != ''):
+            if (segment[2] != ''):
                 sketch.LastPoint.translate(decodeLength(segment[2]))
             if (segment[3] != ''):
                 sketch.LastPoint.translate(decodeLength(segment[3]))
 
-            if(sketch.penDown):
+            if (sketch.penDown):
                 p0.drawline(sketch.LastPoint, 'red', 3)
-            # print p0, LastPoint
+                # print p0, LastPoint
 
-    # LastPoint.draw('Blue',6)
+                # LastPoint.draw('Blue',6)
 
 
+class Limits():
+    def __init__(self):
+        self.l = 0
+        self.r = 0
+        self.u = 0
+        self.d = 0
 
-f = open('data.txt')
+    def calculate(self, p, a = 0):
+        if (p.x < self.l):
+            self.l = p.x - a
+        if (p.x > self.r):
+            self.r = p.x + a
+        if (p.y < self.u):
+            self.u = p.y - a
+        if (p.y > self.d):
+            self.d = p.y + a
+
+def getSketchesData(file):
+    f = open(file)
+    Sketches = []
+    Sketch = []
+
+    limits = Limits()
+    sk = [0, 0, 0, 0, []]
+
+    for line in f:
+
+        regex = "BV?(([L|R|U|D]\d+)?[L|R|U|D]\d+[I|O]\d+)|(?:V([L|R|U|D]\d+))?([L|R|U|D]\d+)|(A(\d+)|C)"
+        segments = re.findall(regex, line)
+        # print segments
+
+        if (segments[0][4] != ''):
+            sketch.LastPoint = Point(0, 0)
+        if (segments[0][5] == '0'):
+            l, r, u, d = 0, 0, 0, 0
+            limits = Limits()
+            # sketch.LastPoint = Point(0, 0)
+            sk = [0, 0, 0, 0, []]
+            Sketches.append(sk)
+
+        for segment in segments:
+            if (segment[0] != ''):
+                b = decodeEllipse(segment[0])
+                b.translate(sketch.LastPoint)
+                sketch.LastPoint.moveTo(b.p2)
+
+                limits.calculate(b.p1)
+                limits.calculate(b.p2)
+                limits.calculate(b.pa, 4)
+
+            else:
+                p0 = Point(sketch.LastPoint.x, sketch.LastPoint.y)
+                if (segment[2] != ''):
+                    sketch.LastPoint.translate(decodeLength(segment[2]))
+                if (segment[3] != ''):
+                    sketch.LastPoint.translate(decodeLength(segment[3]))
+
+                limits.calculate(sketch.LastPoint)
+
+        sk[0] = limits.l
+        sk[1] = limits.r
+        sk[2] = limits.u
+        sk[3] = limits.d
+        sk[4].append(segments)
+
+    return Sketches
+
+
+sketches = getSketchesData('ken.txt')
 index = 0
-av = 0
-nv = 0
-for line in f:
+for sk in sketches:
+    print sk
+
     index += 1
-    if line.strip() == 'stop':
-        if nv > 0:
-            print str(int(av / nv * 100)/10.)+'%'
-        k = raw_input("press [Enter] to end...")
-        exit()
+    fn = 'Sketch'+ str(index)
+    sketch.setup(int(sk[0]-5), int(sk[1]+5), int(sk[2]-5), int(sk[3]+5), fn)
 
-    # bows = decodeEllipses(line)
-    decodeSketch(line)
-    # //showBows(index, bows)
+    for segments in sk[4]:
+        drawSketch(segments)
+
+    sketch.screen.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+fn + ".eps")
+
     k = raw_input("press [Enter] to continue...")
-    # ClearSketch()
 
-    # fn = ''
-    # for b in bows:
-    #     if b.approximates is not None:
-    #         err = math.fabs((b.area - b.approximate_area) / (b.area + b.approximate_area))*2
-    #         av +=err
-    #         nv += 1
-    #
-    #     b.get_best_point_for_label().label(
-    #             b.get_area_error(),
-    #         'red', 'center', ("Arial", 14, "normal"))
-    #
-    #     if fn != '':
-    #         fn += '+'
-    #     fn += b.spec
-    #
-    # if fn != '':
-    #     s = str(index)
-    #     while len(s)<3:
-    #         s = '0'+s
-    #     ts.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+s+'.'+fn+ ".eps")
-    #     _t.clear()
-    #     _penEllipse.clear()
-    #     _penTolerance.clear()
-    #     _penApproximate.clear()
 
-# pen.Screen().exitonclick()
+
+
+# f = open('ken.txt')
+# index = 0
+# av = 0
+# nv = 0
+# for line in f:
+#     index += 1
+#     if line.strip() == 'stop':
+#         if nv > 0:
+#             print str(int(av / nv * 100)/10.)+'%'
+#         k = raw_input("press [Enter] to end...")
+#         exit()
+#
+#     # bows = decodeEllipses(line)
+#     decodeSketch(line)
+#     # //showBows(index, bows)
+#     k = raw_input("press [Enter] to continue...")
+#     # ClearSketch()
+#
+#     # fn = ''
+#     # for b in bows:
+#     #     if b.approximates is not None:
+#     #         err = math.fabs((b.area - b.approximate_area) / (b.area + b.approximate_area))*2
+#     #         av +=err
+#     #         nv += 1
+#     #
+#     #     b.get_best_point_for_label().label(
+#     #             b.get_area_error(),
+#     #         'red', 'center', ("Arial", 14, "normal"))
+#     #
+#     #     if fn != '':
+#     #         fn += '+'
+#     #     fn += b.spec
+#     #
+#     # if fn != '':
+#     #     s = str(index)
+#     #     while len(s)<3:
+#     #         s = '0'+s
+#     #     ts.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+s+'.'+fn+ ".eps")
+#     #     _t.clear()
+#     #     _penEllipse.clear()
+#     #     _penTolerance.clear()
+#     #     _penApproximate.clear()
+#
+# # pen.Screen().exitonclick()
