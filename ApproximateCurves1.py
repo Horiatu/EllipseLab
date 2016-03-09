@@ -55,6 +55,13 @@ class Sketch:
         self.penTolerance.clear()
         self.penApproximate.clear()
         self.penGrid.clear()
+
+        self.pen.ht()
+        self.penEllipse.ht()
+        self.penTolerance.ht()
+        self.penApproximate.ht()
+        self.penGrid.ht()
+
         self.penDown = False
         return self.penDown
 
@@ -89,7 +96,7 @@ class Sketch:
         for x in range(xl, xr + 1):
             if x == 0:
                 t.pensize(2)
-                t.pencolor("blue")
+                t.pencolor("black")
             else:
                 t.pensize(1)
                 if x % 10 == 0:
@@ -104,7 +111,7 @@ class Sketch:
         for y in range(yl, yr + 1):
             if y == 0:
                 t.pensize(2)
-                t.pencolor("blue")
+                t.pencolor("black")
             else:
                 t.pensize(1)
                 if y % 10 == 0:
@@ -227,7 +234,7 @@ class Bow:
         self._init_()
 
         sketch.penEllipse.pu()
-        sketch.penEllipse.pensize(2)
+        sketch.penEllipse.pensize(1)
         sketch.penEllipse.speed(0)
         sketch.penEllipse.pencolor('red')
 
@@ -351,8 +358,7 @@ class Bow:
             for p in self.samples:
                 p.translate(point)
 
-
-    def draw(self, steps=1):
+    def drawAbsolute(self, steps=1):
         # self.p1.draw()
         # self.p2.draw()
         # self.pa.draw('red')
@@ -368,6 +374,8 @@ class Bow:
             setpos(sketch.penEllipse, p.x, p.y)
             sketch.penEllipse.pd()
 
+
+    def draw(self, steps=1):
         if self.samples is not None:
             for p in self.samples:
                 p.draw('red')
@@ -389,11 +397,17 @@ class Bow:
 
     def approximate(self, tol=0.25):
 
-        t = sketch.penApproximate
-        t.pensize(3)
-        t.pu()
+        # sketch.penTolerance.pu()
 
-        sketch.penTolerance.pu()
+        revert = False
+        if(self.p1.x > self.p2.x):
+            p = self._p1
+            self._p1 = self._p2
+            self._p2 = p
+            self.arrow = -self.arrow
+            self._init_()
+            revert = True
+
 
         self._approximates = []
         r = self.p1.distance(self.p2)/2
@@ -405,8 +419,6 @@ class Bow:
         for a in range(-90, 91):
             ar = a * math.pi / 180
             p = self.rotate(Point(r * math.sin(ar) + self.p0.x, q * r * math.cos(ar) + self.p0.y))
-            # setpos(t, p.x, p.y)
-            # t.pd()
 
             if len(self.approximates) > 0:
                 ff = (p.distance(last) - 29./precision)
@@ -452,6 +464,13 @@ class Bow:
                             pl1 = pl2
                             pl2 = pa
 
+        if(revert):
+            self.approximates.reverse()
+            p = self._p1
+            self._p1 = self._p2
+            self._p2 = p
+            self.arrow = -self.arrow
+
         self.get_approximate_area()
         return
 
@@ -481,7 +500,7 @@ class Bow:
 
         if sign <= 0:
             # p2.draw('green', 3,5)
-            p1.draw('gray', 3)
+            # p1.draw('gray', 3)
             # p.draw('cyan', 3,5)
             # print 'p2',p2, 'p1',p1, 'p',p, 'a2',int(a2), 'a1',int(a1), 'sign',sign, int(a1 - a2), self.arrow
             return True
@@ -602,17 +621,17 @@ def drawSketch(segments):
             sketch.LastPoint = Point(0, 0)
         if (segment[5] == '0'):
             sketch.penDown = False
-            sketch.penDown = False
         if (segment[4] == 'C'):
             sketch.penDown = sketch.PenDown()
         if (segment[0] != ''):
             b = decodeEllipse(segment[0])
             b.translate(sketch.LastPoint)
+            b.drawAbsolute()
             # b.sample()
             b.approximate()
             b.draw()
             sketch.LastPoint.moveTo(b.p2)
-            # LastPoint.draw('Black', 6)
+
         else:
             p0 = Point(sketch.LastPoint.x, sketch.LastPoint.y)
             if (segment[2] != ''):
@@ -622,9 +641,6 @@ def drawSketch(segments):
 
             if (sketch.penDown):
                 p0.drawline(sketch.LastPoint, 'red', 3)
-                # print p0, LastPoint
-
-                # LastPoint.draw('Blue',6)
 
 
 class Limits():
@@ -696,12 +712,13 @@ def getSketchesData(file):
 
 
 sketches = getSketchesData('ken.txt')
+
 index = 0
 for sk in sketches:
     print sk
 
     index += 1
-    fn = 'Sketch'+ str(index)
+    fn = 'Sketch.Fix'+ str(index)
     sketch.setup(int(sk[0]-5), int(sk[1]+5), int(sk[2]-5), int(sk[3]+5), fn)
 
     for segments in sk[4]:
@@ -714,47 +731,3 @@ for sk in sketches:
 
 
 
-# f = open('ken.txt')
-# index = 0
-# av = 0
-# nv = 0
-# for line in f:
-#     index += 1
-#     if line.strip() == 'stop':
-#         if nv > 0:
-#             print str(int(av / nv * 100)/10.)+'%'
-#         k = raw_input("press [Enter] to end...")
-#         exit()
-#
-#     # bows = decodeEllipses(line)
-#     decodeSketch(line)
-#     # //showBows(index, bows)
-#     k = raw_input("press [Enter] to continue...")
-#     # ClearSketch()
-#
-#     # fn = ''
-#     # for b in bows:
-#     #     if b.approximates is not None:
-#     #         err = math.fabs((b.area - b.approximate_area) / (b.area + b.approximate_area))*2
-#     #         av +=err
-#     #         nv += 1
-#     #
-#     #     b.get_best_point_for_label().label(
-#     #             b.get_area_error(),
-#     #         'red', 'center', ("Arial", 14, "normal"))
-#     #
-#     #     if fn != '':
-#     #         fn += '+'
-#     #     fn += b.spec
-#     #
-#     # if fn != '':
-#     #     s = str(index)
-#     #     while len(s)<3:
-#     #         s = '0'+s
-#     #     ts.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+s+'.'+fn+ ".eps")
-#     #     _t.clear()
-#     #     _penEllipse.clear()
-#     #     _penTolerance.clear()
-#     #     _penApproximate.clear()
-#
-# # pen.Screen().exitonclick()
