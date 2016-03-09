@@ -400,14 +400,13 @@ class Bow:
         # sketch.penTolerance.pu()
 
         revert = False
-        if(self.p1.x > self.p2.x):
+        if((self.p1.x > self.p2.x) or (self.p1.x == self.p2.x and self.p1.y > self.p2.y)):
             p = self._p1
             self._p1 = self._p2
             self._p2 = p
             self.arrow = -self.arrow
             self._init_()
             revert = True
-
 
         self._approximates = []
         r = self.p1.distance(self.p2)/2
@@ -724,9 +723,13 @@ for sk in sketches:
     for segments in sk[4]:
         drawSketch(segments)
 
-    sketch.screen.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+fn + ".eps")
+    # sketch.screen.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+fn + ".eps")
 
     k = raw_input("press [Enter] to continue...")
+
+    print k
+
+
 
 
 
