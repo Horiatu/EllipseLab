@@ -202,19 +202,19 @@ class Point:
         return None
 
     def match(self, tol):
-        point = Point(math.floor(self.x), math.floor(self.y))
+        point = Point(int(math.floor(self.x)), int(math.floor(self.y)))
         d = self.distance(point)
         if (d <= tol):
             return point
-        point = Point(math.ceil(self.x), math.floor(self.y))
+        point = Point(int(math.ceil(self.x)), int(math.floor(self.y)))
         d = self.distance(point)
         if (d <= tol):
             return point
-        point = Point(math.floor(self.x), math.ceil(self.y))
+        point = Point(int(math.floor(self.x)), int(math.ceil(self.y)))
         d = self.distance(point)
         if (d <= tol):
             return point
-        point = Point(math.ceil(self.x), math.ceil(self.y))
+        point = Point(int(math.ceil(self.x)), int(math.ceil(self.y)))
         d = self.distance(point)
         if (d <= tol):
             return point
@@ -629,6 +629,7 @@ def drawSketch(segments):
             # b.sample()
             b.approximate()
             b.draw()
+            # print b.spec, b.approximates
             sketch.LastPoint.moveTo(b.p2)
 
         else:
@@ -665,22 +666,29 @@ def getSketchesData(file):
     Sketch = []
 
     limits = Limits()
-    sk = [0, 0, 0, 0, []]
+    sk = [0, 0, 0, 0, [], '', '', '']
+    pid = ''
 
-    for line in f:
-
+    for l in f:
+        lll = l.split("|")
+        parcelId = lll[0]
+        improvementType = lll[1]
+        line = lll[2]
         regex = "BV?(([L|R|U|D]\d+)?[L|R|U|D]\d+[I|O]\d+)|(?:V([L|R|U|D]\d+))?([L|R|U|D]\d+)|(A(\d+)|C)"
         segments = re.findall(regex, line)
         # print segments
 
         if (segments[0][4] != ''):
             sketch.LastPoint = Point(0, 0)
-        if (segments[0][5] == '0'):
+        # if (segments[0][5] == '0'):
+        if (parcelId != pid):
             l, r, u, d = 0, 0, 0, 0
             limits = Limits()
             # sketch.LastPoint = Point(0, 0)
-            sk = [0, 0, 0, 0, []]
+            sk = [0, 0, 0, 0, [], '', parcelId, improvementType]
             Sketches.append(sk)
+
+            pid = parcelId
 
         for segment in segments:
             if (segment[0] != ''):
@@ -706,29 +714,29 @@ def getSketchesData(file):
         sk[2] = limits.u
         sk[3] = limits.d
         sk[4].append(segments)
+        sk[5] += line
 
     return Sketches
 
 
-sketches = getSketchesData('ken.txt')
+sketches = getSketchesData('ken2.txt')
 
 index = 0
 for sk in sketches:
-    print sk
-
     index += 1
-    fn = 'Sketch.Fix'+ str(index)
+    fn = 'Parcel-'+sk[6]
     sketch.setup(int(sk[0]-5), int(sk[1]+5), int(sk[2]-5), int(sk[3]+5), fn)
 
+    print(fn)
+    print(sk[5].strip('\n'))
+    print(sk)
+    print
     for segments in sk[4]:
         drawSketch(segments)
 
-    # sketch.screen.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+fn + ".eps")
+    sketch.screen.getcanvas().postscript(file="C:\Users\htudosie\Desktop\E\\"+fn + ".eps")
 
-    k = raw_input("press [Enter] to continue...")
-
-    print k
-
+    # k = raw_input("press [Enter] to continue...")
 
 
 
